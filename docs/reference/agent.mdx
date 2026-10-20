@@ -375,7 +375,8 @@ The built-in agent offers these tools while no secret has been filled:
 - `tap_at` needs an engine whose `actions` or `pointerActions` include `tap`,
   `hover_at` one whose include `hover`, and `drag_at` one whose include
   `dragTo`. Without the pointer kind, the point must land on a listed
-  control, and for `drag_at` both points must.
+  control, and the two `drag_at` points on two different listed controls;
+  otherwise the call fails with `UNSUPPORTED_CAPABILITY`.
 - A bare-point tap, hover, or drag replays only on a viewport of the recorded
   size, or at the same place inside the listed node that contained it. A
   drag places each of its two points that way.

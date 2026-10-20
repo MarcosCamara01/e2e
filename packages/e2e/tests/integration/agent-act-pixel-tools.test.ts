@@ -35,6 +35,8 @@ test('drags a drawn pin the tree does not list', async ({ app, agent, screen }) 
   await app.open('/canvas');
   await agent.act('drag the red pin to the middle of the map');
   await expect(screen.getByRole('status')).toHaveText('moved red to 200,100');
+  await screen.tapAt({ x: 200, y: 100 });
+  await expect(screen.getByRole('status')).toHaveText('red');
 });
 
 test('drags between listed controls by id when both points land on them', async ({ app, agent }) => {
