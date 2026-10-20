@@ -68,7 +68,32 @@ ${button}  <script>
     // A tap count drawn on the map: every click repaints it, and nothing in
     // the tree lists it, the way a canvas-rendered widget shows its own state.
     let taps = 0;
+    // A drawn drag: a pin pressed and released away from itself moves there,
+    // the way a whiteboard moves a shape. The release's own click is the
+    // drag's, not a tap.
+    let held;
+    let dragged = false;
+    const at = (event) => {
+      const box = canvas.getBoundingClientRect();
+      return { x: Math.round(event.clientX - box.left), y: Math.round(event.clientY - box.top) };
+    };
+    canvas.addEventListener('pointerdown', (event) => {
+      const point = at(event);
+      held = pins.find((candidate) => Math.hypot(candidate.x - point.x, candidate.y - point.y) <= 18);
+    });
+    canvas.addEventListener('pointerup', (event) => {
+      const point = at(event);
+      if (held !== undefined && Math.hypot(held.x - point.x, held.y - point.y) > 18) {
+        document.getElementById('hit').textContent = 'moved ' + held.name + ' to ' + point.x + ',' + point.y;
+        dragged = true;
+      }
+      held = undefined;
+    });
     canvas.addEventListener('click', (event) => {
+      if (dragged) {
+        dragged = false;
+        return;
+      }
       const box = canvas.getBoundingClientRect();
       const x = event.clientX - box.left;
       const y = event.clientY - box.top;
