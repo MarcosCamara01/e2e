@@ -305,16 +305,28 @@ export type PointActionName = 'tapAt' | 'hoverAt';
  * same place in its live box, so a layout shift moves the point with it.
  * The end anchors decide whether the action did what it did the first time.
  */
-export interface PointAction extends ActionBase {
+export interface PointAction extends ActionBase, TracePointEnd {
   readonly name: PointActionName;
-  readonly point: { readonly x: number; readonly y: number };
   readonly viewport: TraceViewport;
+}
+
+/** A recorded point and, when a listed node with a durable descriptor contained it, its place inside that node's box. */
+export interface TracePointEnd {
+  readonly point: { readonly x: number; readonly y: number };
   readonly within?: {
     readonly target: TraceTargetDescriptor;
     /** The point's place inside the node's box, 0 at the left or top edge and 1 at the right or bottom. */
     readonly fx: number;
     readonly fy: number;
   };
+}
+
+/** A drag from one bare viewport point to another, each end replayed the way a point action's one point is. */
+export interface PointDragAction extends ActionBase {
+  readonly name: 'dragAt';
+  readonly from: TracePointEnd;
+  readonly to: TracePointEnd;
+  readonly viewport: TraceViewport;
 }
 
 /**
@@ -372,6 +384,7 @@ export type RecordedAction =
   | NavigateAction
   | BackAction
   | PointAction
+  | PointDragAction
   | TypeTextAction
   | PressKeyAction
   | DismissKeyboardAction
@@ -700,12 +713,15 @@ function readRecordedAction(document: unknown): RecordedAction | undefined {
     }
     case 'tapAt':
     case 'hoverAt': {
-      const point = readPoint(raw['point']);
+      const end = readPointEnd(raw);
       const viewport = readViewport(raw['viewport']);
-      if (point === undefined || viewport === undefined) return undefined;
-      const within = raw['within'] === undefined ? undefined : readWithin(raw['within']);
-      if (raw['within'] !== undefined && within === undefined) return undefined;
-      return { name, summary, point, viewport, ...(within === undefined ? {} : { within }) };
+      return end === undefined || viewport === undefined ? undefined : { name, summary, point: end.point, viewport, ...(end.within === undefined ? {} : { within: end.within }) };
+    }
+    case 'dragAt': {
+      const from = readPointEnd(raw['from']);
+      const to = readPointEnd(raw['to']);
+      const viewport = readViewport(raw['viewport']);
+      return from === undefined || to === undefined || viewport === undefined ? undefined : { name: 'dragAt', summary, from, to, viewport };
     }
     case 'back':
       return { name: 'back', summary };
@@ -730,12 +746,20 @@ function readRecordedAction(document: unknown): RecordedAction | undefined {
   }
 }
 
-function readPoint(document: unknown): PointAction['point'] | undefined {
+/** A point and its place inside a listed node: a point action's own fields, or one end of a drag. */
+function readPointEnd(document: unknown): TracePointEnd | undefined {
   const raw = readObject(document);
-  const x = raw?.['x'];
-  const y = raw?.['y'];
+  const point = readObject(raw?.['point']);
+  const x = point?.['x'];
+  const y = point?.['y'];
   if (typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) return undefined;
-  return { x, y };
+  if (raw?.['within'] === undefined) return { point: { x, y } };
+  const within = readObject(raw['within']);
+  const target = within === undefined ? undefined : readDescriptor(within['target']);
+  const fx = within?.['fx'];
+  const fy = within?.['fy'];
+  if (target === undefined || !isFraction(fx) || !isFraction(fy)) return undefined;
+  return { point: { x, y }, within: { target, fx, fy } };
 }
 
 function readViewport(document: unknown): TraceViewport | undefined {
@@ -746,15 +770,6 @@ function readViewport(document: unknown): TraceViewport | undefined {
     return undefined;
   }
   return { width: width as number, height: height as number };
-}
-
-function readWithin(document: unknown): NonNullable<PointAction['within']> | undefined {
-  const raw = readObject(document);
-  const target = raw === undefined ? undefined : readDescriptor(raw['target']);
-  const fx = raw?.['fx'];
-  const fy = raw?.['fy'];
-  if (target === undefined || !isFraction(fx) || !isFraction(fy)) return undefined;
-  return { target, fx, fy };
 }
 
 function isFraction(value: unknown): value is number {
@@ -799,6 +814,13 @@ function mapDescriptorText(descriptor: TraceTargetDescriptor, map: TraceTextMap)
     if (mapped !== value) changes[field] = mapped;
   }
   return Object.keys(changes).length === 0 ? descriptor : { ...descriptor, ...changes };
+}
+
+/** A point end with its node's text mapped, unchanged without a node; undefined when that text maps to nothing. */
+function mapPointEnd<E extends TracePointEnd>(end: E, map: TraceTextMap): E | undefined {
+  if (end.within === undefined) return end;
+  const target = mapDescriptorText(end.within.target, map);
+  return target === undefined ? undefined : { ...end, within: { ...end.within, target } };
 }
 
 function mapActionText(action: RecordedAction, map: TraceTextMap): RecordedAction | undefined {
@@ -858,9 +880,13 @@ function mapActionText(action: RecordedAction, map: TraceTextMap): RecordedActio
     }
     case 'tapAt':
     case 'hoverAt': {
-      if (action.within === undefined) return withSummary(action);
-      const mapped = target(action.within.target);
-      return mapped === undefined ? undefined : withSummary({ ...action, within: { ...action.within, target: mapped } });
+      const mapped = mapPointEnd(action, map);
+      return mapped === undefined ? undefined : withSummary(mapped);
+    }
+    case 'dragAt': {
+      const from = mapPointEnd(action.from, map);
+      const to = mapPointEnd(action.to, map);
+      return from === undefined || to === undefined ? undefined : withSummary({ ...action, from, to });
     }
     case 'back':
     case 'pressKey':
