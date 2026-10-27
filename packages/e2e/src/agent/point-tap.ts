@@ -152,8 +152,9 @@ export function describePointDrag(
   input: PointProse & {
     readonly from: ViewportPoint;
     readonly to: ViewportPoint;
-    /** The listed controls holding each end, if any. */
+    /** The listed control holding the start, if any. */
     readonly source: RedactedNode | undefined;
+    /** The listed control holding the end, if any. */
     readonly destination: RedactedNode | undefined;
     readonly fromUnder: RedactedNode | undefined;
     readonly toUnder: RedactedNode | undefined;

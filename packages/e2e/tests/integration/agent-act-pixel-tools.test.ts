@@ -46,9 +46,10 @@ test('drags a drawn pin the tree does not list', async ({ app, agent, screen }) 
   await expect(screen.getByRole('status')).toHaveText('red');
 });
 
-test('drags between the bare points on listed controls and names them', async ({ app, agent }) => {
+test('drags between the bare points on listed controls and names them', async ({ app, agent, screen }) => {
   await app.open('/canvas');
   await agent.act('drag the reset button onto the note field');
+  await expect(screen.getByRole('status')).toHaveText('none');
 });
 
 test('opens a bare canvas with a screenshot already attached', async ({ app, agent, screen }) => {
@@ -600,11 +601,6 @@ test('taps outside the popover', async ({ agent }) => { await agent.act('dismiss
   });
 });
 
-/**
- * The same two-control drag on an engine with node drags and no bare-point
- * drag: the points join the two controls by id, and two points inside one
- * control, which a node drag onto itself cannot do, fail.
- */
 describe('actions.dragAt on an engine that drags listed nodes only', () => {
   const performed: string[] = [];
   let summary: string | undefined;

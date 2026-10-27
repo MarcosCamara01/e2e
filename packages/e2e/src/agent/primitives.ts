@@ -571,9 +571,9 @@ export function createGrammarTools(
   // The pixel verbs are offered while pixels can still leave the runner. Once
   // a secret was filled in the attempt they could only decline, and a verb
   // that is absent costs the model nothing where one that declines costs a
-  // turn. They are the fallback for a target the tree does not list: a tap
-  // or hover reaches the engine as a bare point where it takes one, and a
-  // type, press, or select acts on a listed control under the point by id,
+  // turn. They are the fallback for a target the tree does not list: a tap,
+  // hover, or drag reaches the engine as bare points where it takes them, and
+  // a type, press, or select acts on a listed control under the point by id,
   // else through the keyboard.
   if (!context.pixelsTainted) {
     tools['screenshot'] = screenTool({
@@ -658,10 +658,11 @@ function isNotFillable(cause: unknown): boolean {
 
 /**
  * The point-addressed fallback verbs, offered next to the id-addressed
- * grammar while pixels may reach the model: `tap_at`, `type_at`, `press_at`,
- * and `select_at`, each taking a point in the latest screenshot for a target
- * the tree does not list. `tap_at` taps the bare point where the engine
- * takes one. The others hit-test the point against the tree the harness
+ * grammar while pixels may reach the model: `tap_at`, `drag_at`, `type_at`,
+ * `press_at`, and `select_at`, each taking a point in the latest screenshot
+ * for a target the tree does not list. `tap_at` taps the bare point where the
+ * engine takes one, and `drag_at` drags between bare points the same way. The
+ * others hit-test the point against the tree the harness
  * holds, so a field the tree lists is acted on by id underneath: policed,
  * recorded with a durable descriptor, and replayed like any other action.
  * With a keyboard, a point on nothing listed is tapped to focus it and
@@ -757,7 +758,7 @@ function createPointTools(
   if (verbs.has('drag') || verbs.has('dragAt')) {
     tools['drag_at'] = screenTool({
       description:
-        'Drag from one point in the latest screenshot to another, for a drag the screen does not list: a shape on a canvas, a pin on a map, a card dropped on an empty spot. Both points are pixel coordinates in that image (x from the left edge, y from the top edge); start on the middle of what you drag. The bare points are dragged' +
+        'Drag from one point in the latest screenshot to another, for a drag the screen does not list: a shape on a canvas, a pin on a map, a card dropped on an empty spot. Both points are pixel coordinates in that image (x from the left edge, y from the top edge). Start on the center of what you drag. The bare points are dragged' +
         (verbs.has('dragAt') ? '.' : ', which this engine cannot do: the points must land on two different listed controls.') +
         ' Last resort: when the screen lists what you drag and where it goes, use drag by id.',
       inputSchema: z.object({

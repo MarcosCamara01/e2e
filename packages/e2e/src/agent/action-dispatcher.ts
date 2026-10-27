@@ -314,14 +314,11 @@ export class ActionDispatcher {
         byId,
         ...this.prose(observation),
       });
-      const controls = {
-        ...(fromHit.control === undefined ? {} : { source: { id: fromHit.control.ref.id } }),
-        ...(toHit.control === undefined ? {} : { destination: { id: toHit.control.ref.id } }),
-      };
-      if (byId && controls.source !== undefined && controls.destination !== undefined) {
-        const { source, destination } = controls;
+      if (byId) {
+        const source = { id: fromHit.control.ref.id };
+        const destination = { id: toHit.control.ref.id };
         await this.runActionNow('dragTo', () => this.targeted(this.feed.resolve(source), (node) => this.dragOnto(node, destination)));
-        return { from: start, to: end, ...controls, summary };
+        return { from: start, to: end, source, destination, summary };
       }
       if (!this.verbs.has('dragAt')) {
         throw new TestError(
@@ -329,7 +326,6 @@ export class ActionDispatcher {
           `the drag from (${String(start.x)}, ${String(start.y)}) to (${String(end.x)}, ${String(end.y)}) does not join two different controls the screen lists and this engine drags listed nodes only; drag a node onto another by id instead`,
         );
       }
-      // Each end is placed the way a point verb's one point is.
       const fromHandle = this.traceHandle(observation, fromHit.under);
       const toHandle = this.traceHandle(observation, toHit.under);
       await this.runActionNow('dragAt', async () => {
@@ -341,7 +337,13 @@ export class ActionDispatcher {
           viewport: { width: observation.viewport.width, height: observation.viewport.height },
         };
       });
-      return { from: start, to: end, ...controls, summary };
+      return {
+        from: start,
+        to: end,
+        ...(fromHit.control === undefined ? {} : { source: { id: fromHit.control.ref.id } }),
+        ...(toHit.control === undefined ? {} : { destination: { id: toHit.control.ref.id } }),
+        summary,
+      };
     });
   }
 

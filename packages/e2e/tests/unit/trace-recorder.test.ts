@@ -3,7 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { describeTarget } from '../../src/agent/actions.ts';
 import { TraceRecorder } from '../../src/cache/recorder.ts';
-import { buildTraceEntry, MAX_TRACE_INPUT_CHARS, readTraceEntry } from '../../src/cache/trace.ts';
+import { buildTraceEntry, MAX_TRACE_INPUT_CHARS } from '../../src/cache/trace.ts';
+import { readTraceEntry } from '../../src/cache/trace-read.ts';
 import { createRedactor, SecretLedger } from '../../src/internal/redact.ts';
 import { redacted } from '../helpers/redacted.ts';
 

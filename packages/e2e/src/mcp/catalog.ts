@@ -1,10 +1,11 @@
 /**
  * The catalog of a live session: every tool `call` can run, as AI SDK tools.
  * `observe` shows the whole screen, the grammar is what the target's engine
- * honors, `screenshot` and the point tools (`tap_at`, `hover_at`, `drag_at`,
- * `type_at`, `press_at`, `select_at`) among it, answering `PIXEL_TAINTED` once a secret
- * has been filled, `locate` tries a semantic locator the way a test would,
- * `test_lines` returns the test line every action printed (`test-lines.ts`),
+ * honors, `screenshot` and the point tools (`tap_at`, `hover_at`,
+ * `drag_at`, `type_at`, `press_at`, `select_at`) among it, answering
+ * `PIXEL_TAINTED` once a secret has been filled, `locate` tries a semantic
+ * locator the way a test would, `test_lines` returns the test line every
+ * action printed (`test-lines.ts`),
  * `start_recording` and `stop_recording` follow when the engine records video,
  * and the project's own tools come last. The config load refuses a project
  * tool named like a built-in; should one reach here anyway, the built-in

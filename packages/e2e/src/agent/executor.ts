@@ -319,11 +319,13 @@ export interface PointTapResult {
 
 /** What one `dragAt` did, for the executor to relay to its model. */
 export interface PointDragResult {
-  /** Where the drag started and ended, in the newest observation's CSS pixels. */
+  /** Where the drag started, in the newest observation's CSS pixels. */
   readonly from: ViewportPoint;
+  /** Where the drag ended, in the same pixels. */
   readonly to: ViewportPoint;
-  /** The listed, enabled controls holding each end, dragged by id or between the points; absent where none is listed. */
+  /** The listed, enabled control holding the start, dragged by id or at the point; absent when none is listed there. */
   readonly source?: ExecutorTarget;
+  /** The listed, enabled control holding the end, the same way. */
   readonly destination?: ExecutorTarget;
   /** Prose for a model: what was dragged where, or what sits under the bare points. */
   readonly summary: string;

@@ -34,8 +34,8 @@ import {
   type RecordedModel,
   type ScrollAction,
   type TraceKeyContext,
-  type TraceProvenance,
   type TracePointEnd,
+  type TraceProvenance,
   type TraceTargetDescriptor,
 } from './trace.ts';
 import { readRecordedModel } from './trace-fields.ts';
@@ -231,7 +231,7 @@ export class TraceRecorder {
         return { name: 'dismissKeyboard', summary };
       case 'tapAt':
       case 'hoverAt': {
-        const within = placeWithin(target, action.under, action.point);
+        const within = withinOf(target, action.under, action.point);
         return {
           name: action.name,
           summary,
@@ -241,10 +241,9 @@ export class TraceRecorder {
         };
       }
       case 'dragAt': {
-        // Each end is kept the way a point action keeps its one point.
         const end = (descriptor: TraceTargetDescriptor | undefined, placed: PlacedPoint): TracePointEnd => {
-          const within = placeWithin(descriptor, placed.under, placed.point);
-          return within === undefined ? { point: placed.point } : { point: placed.point, within };
+          const within = withinOf(descriptor, placed.under, placed.point);
+          return { point: placed.point, ...(within === undefined ? {} : { within }) };
         };
         return {
           name: 'dragAt',
@@ -299,7 +298,7 @@ export class TraceRecorder {
  * groups on a screen merged into one accessibility node, could not be
  * re-found and is not kept: the point alone is the honest record.
  */
-function placeWithin(
+function withinOf(
   target: TraceTargetDescriptor | undefined,
   under: RedactedNode | undefined,
   point: ViewportPoint,
