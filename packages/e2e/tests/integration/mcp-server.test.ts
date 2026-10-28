@@ -253,6 +253,7 @@ describe('e2e mcp', { timeout: 120_000 }, () => {
       'select_at',
       'type_secret',
       'locate',
+      'run_code',
       'test_lines',
       'start_recording',
       'stop_recording',
